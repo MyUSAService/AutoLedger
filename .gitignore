@@ -1,0 +1,19 @@
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# env — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# local file storage (dev driver)
+storage/
+
+# generated
+coverage/
+*.log
+.DS_Store

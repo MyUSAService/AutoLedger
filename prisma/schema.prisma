@@ -1,0 +1,348 @@
+// Altemore Statement Portal — Phase 1 data model.
+// Money is ALWAYS stored as integer cents. Never floats.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Org & auth ----------
+
+model Firm {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  clients   Client[]
+  users     User[]
+}
+
+enum UserRole {
+  CLIENT
+  STAFF
+  ADMIN
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String? // staff/admin; clients may use magic links (Phase 2)
+  role          UserRole
+  firmId        String
+  firm          Firm           @relation(fields: [firmId], references: [id])
+  clientId      String? // set when role = CLIENT
+  client        Client?        @relation(fields: [clientId], references: [id])
+  createdAt     DateTime       @default(now())
+  reviewActions ReviewAction[]
+  auditLogs     AuditLog[]
+}
+
+enum EntityType {
+  SINGLE_MEMBER_LLC
+  MULTI_MEMBER_LLC
+  C_CORP
+}
+
+model Client {
+  id           String       @id @default(cuid())
+  firmId       String
+  firm         Firm         @relation(fields: [firmId], references: [id])
+  businessName String
+  entityType   EntityType
+  businessType String? // free text: "e-commerce", "consulting"... used as LLM context
+  ein          String?
+  language     String       @default("it") // client UI language
+  createdAt    DateTime     @default(now())
+  engagements  Engagement[]
+  users        User[]
+  rules        ClassificationRule[]
+}
+
+// ---------- Engagement (client × fiscal year) ----------
+
+enum EngagementStatus {
+  OPEN
+  IN_REVIEW
+  RELEASED
+}
+
+model Engagement {
+  id             String                  @id @default(cuid())
+  clientId       String
+  client         Client                  @relation(fields: [clientId], references: [id])
+  fiscalYear     Int
+  status         EngagementStatus        @default(OPEN)
+  createdAt      DateTime                @default(now())
+  accounts       Account[]
+  documents      StatementDocument[]
+  transactions   Transaction[]
+  questionnaire  QuestionnaireResponse[]
+  workbooks      GeneratedWorkbook[]
+  reviewActions  ReviewAction[]
+
+  @@unique([clientId, fiscalYear])
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  OTHER
+}
+
+model Account {
+  id           String              @id @default(cuid())
+  engagementId String
+  engagement   Engagement          @relation(fields: [engagementId], references: [id])
+  bankName     String
+  last4        String // NEVER store full account numbers
+  accountType  AccountType         @default(CHECKING)
+  currency     String              @default("USD")
+  createdAt    DateTime            @default(now())
+  documents    StatementDocument[]
+  transactions Transaction[]
+
+  @@unique([engagementId, bankName, last4])
+}
+
+// ---------- Statements & reconciliation ----------
+
+enum DocumentStatus {
+  UPLOADED
+  VALIDATING
+  REJECTED // not a bank statement / missing required fields
+  EXTRACTING
+  RECONCILING
+  FAILED_RECONCILIATION
+  RECONCILED
+  CLASSIFIED
+  DUPLICATE
+}
+
+model StatementDocument {
+  id                 String         @id @default(cuid())
+  engagementId       String
+  engagement         Engagement     @relation(fields: [engagementId], references: [id])
+  accountId          String?
+  account            Account?       @relation(fields: [accountId], references: [id])
+  originalFilename   String
+  storageKey         String // key in storage driver (encrypted at rest)
+  fileSha256         String // duplicate detection
+  status             DocumentStatus @default(UPLOADED)
+  rejectionReason    String? // plain-language reason shown to client
+  periodStart        DateTime?
+  periodEnd          DateTime?
+  openingBalanceCents BigInt?
+  closingBalanceCents BigInt?
+  pageCount          Int?
+  isScanned          Boolean        @default(false)
+  // Reconciliation proof — stored arithmetic, audit trail (§3C)
+  reconSumCreditsCents BigInt?
+  reconSumDebitsCents  BigInt?
+  reconComputedClosingCents BigInt?
+  reconDiscrepancyCents     BigInt?
+  reconAttempts      Int            @default(0)
+  reconciledAt       DateTime?
+  createdAt          DateTime       @default(now())
+  transactions       Transaction[]
+  extractionCalls    ExtractionCall[]
+
+  @@unique([engagementId, fileSha256])
+  @@index([engagementId, status])
+}
+
+// Audit log of every model call (§4: log model, prompt version, raw response)
+model ExtractionCall {
+  id           String            @id @default(cuid())
+  documentId   String
+  document     StatementDocument @relation(fields: [documentId], references: [id])
+  purpose      String // "extraction" | "extraction_retry" | "classification"
+  model        String
+  promptVersion String
+  pageRange    String?
+  rawResponse  String // full raw model output for auditability
+  inputTokens  Int?
+  outputTokens Int?
+  createdAt    DateTime          @default(now())
+}
+
+// ---------- Transactions & classification ----------
+
+enum Direction {
+  DEBIT
+  CREDIT
+}
+
+enum ConfidenceTier {
+  HIGH   // auto-classified, visible in review
+  MEDIUM // classified, flagged yellow
+  LOW    // NOT classified — client question first, then staff
+}
+
+enum ClassifiedBy {
+  RULE
+  AI
+  STAFF
+}
+
+enum FlagType {
+  NONE
+  LOW_CONFIDENCE
+  UNMATCHED_TRANSFER
+  OWNER_DEPOSIT
+  OWNER_WITHDRAWAL
+  LOAN_ACTIVITY
+  CREDIT_CARD_PAYMENT
+  LARGE_PURCHASE
+  TAX_PAYMENT
+  CONTRADICTION
+  OTHER_EXPENSE_OVERFLOW
+}
+
+model Transaction {
+  id               String            @id @default(cuid())
+  engagementId     String
+  engagement       Engagement        @relation(fields: [engagementId], references: [id])
+  accountId        String
+  account          Account           @relation(fields: [accountId], references: [id])
+  documentId       String
+  document         StatementDocument @relation(fields: [documentId], references: [id])
+  date             DateTime
+  rawDescription   String
+  amountCents      BigInt // always positive; direction carries sign
+  direction        Direction
+  runningBalanceCents BigInt?
+  // classification
+  categoryCode     String? // chart-of-accounts code; null = unclassified
+  confidence       ConfidenceTier?
+  classifiedBy     ClassifiedBy?
+  classifierRationale String? // one-line rationale from rule/LLM
+  ruleId           String?
+  rule             ClassificationRule? @relation(fields: [ruleId], references: [id])
+  // flags & special handling
+  flag             FlagType          @default(NONE)
+  flagResolved     Boolean           @default(false)
+  transferPairId   String? // matched inter-account transfer partner
+  excludeFromPnl   Boolean           @default(false) // transfers, principal, owner txns
+  loanPrincipalCents BigInt? // when a loan payment is split
+  loanInterestCents  BigInt?
+  createdAt        DateTime          @default(now())
+  reviewActions    ReviewAction[]
+
+  @@index([engagementId, flag, flagResolved])
+  @@index([engagementId, categoryCode])
+  @@index([accountId, date])
+}
+
+enum RuleMatchType {
+  EXACT
+  CONTAINS
+  REGEX
+}
+
+model ClassificationRule {
+  id           String        @id @default(cuid())
+  clientId     String? // null = global rule shipped with the app
+  client       Client?       @relation(fields: [clientId], references: [id])
+  matchType    RuleMatchType
+  pattern      String
+  direction    Direction? // optionally constrain to debit/credit
+  categoryCode String
+  priority     Int           @default(100) // lower runs first
+  active       Boolean       @default(true)
+  createdFromStaffAction Boolean @default(false) // rule-learning provenance
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+
+  @@index([clientId, active, priority])
+}
+
+// ---------- Questionnaire (Step E) ----------
+
+model QuestionnaireResponse {
+  id           String     @id @default(cuid())
+  engagementId String
+  engagement   Engagement @relation(fields: [engagementId], references: [id])
+  section      String // "opening_balances" | "fixed_assets" | "loans" | "ar" | "ap" | "inventory" | "owner_txns"
+  questionKey  String
+  answerJson   String // structured answer payload
+  answeredAt   DateTime   @default(now())
+
+  @@unique([engagementId, section, questionKey])
+}
+
+// ---------- Review & output ----------
+
+model ReviewAction {
+  id            String       @id @default(cuid())
+  engagementId  String
+  engagement    Engagement   @relation(fields: [engagementId], references: [id])
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  action        String // "reclassify" | "approve" | "resolve_flag" | "release" ...
+  fromValue     String?
+  toValue       String?
+  createdAt     DateTime     @default(now())
+
+  @@index([engagementId, createdAt])
+}
+
+model GeneratedWorkbook {
+  id           String     @id @default(cuid())
+  engagementId String
+  engagement   Engagement @relation(fields: [engagementId], references: [id])
+  version      Int
+  storageKey   String
+  generatedById String
+  lockedAt     DateTime   @default(now())
+
+  @@unique([engagementId, version])
+}
+
+// ---------- Audit log (full trail: who, what, when) ----------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  entity     String // "StatementDocument", "Transaction"...
+  entityId   String
+  action     String
+  detailJson String?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+// ---------- DB-backed job queue ----------
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  type        String // "process_statement" | "generate_workbook"
+  payloadJson String
+  status      JobStatus @default(PENDING)
+  progress    Int       @default(0) // 0–100
+  progressLabel String? // "Extracting pages 1–8..."
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(2)
+  lastError   String?
+  runAfter    DateTime  @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, runAfter])
+}

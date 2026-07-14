@@ -1,0 +1,161 @@
+{
+  "is_bank_statement": true,
+  "bank_name": "JPMorgan Chase Bank, N.A.",
+  "account_last4": "4821",
+  "account_type": "checking",
+  "currency": "USD",
+  "period_start": "2025-01-01",
+  "period_end": "2025-01-31",
+  "opening_balance": "12450.30",
+  "closing_balance": "21080.76",
+  "lines": [
+    {
+      "date": "2025-01-02",
+      "description": "STRIPE TRANSFER ST-A1B2C3 PAYOUT",
+      "amount": "4825.00",
+      "direction": "credit",
+      "running_balance": "17275.30"
+    },
+    {
+      "date": "2025-01-03",
+      "description": "GOOGLE ADS 7534218890 CC@GOOGLE.COM",
+      "amount": "350.00",
+      "direction": "debit",
+      "running_balance": "16925.30"
+    },
+    {
+      "date": "2025-01-06",
+      "description": "SHOPIFY PAYOUT 44213",
+      "amount": "2910.75",
+      "direction": "credit",
+      "running_balance": "19836.05"
+    },
+    {
+      "date": "2025-01-07",
+      "description": "MONTHLY SERVICE FEE",
+      "amount": "15.00",
+      "direction": "debit",
+      "running_balance": "19821.05"
+    },
+    {
+      "date": "2025-01-08",
+      "description": "FACEBK ADS T2X8W1 META PLATFORMS",
+      "amount": "420.50",
+      "direction": "debit",
+      "running_balance": "19400.55"
+    },
+    {
+      "date": "2025-01-09",
+      "description": "CHECK # 1042",
+      "amount": "1200.00",
+      "direction": "debit",
+      "running_balance": "18200.55"
+    },
+    {
+      "date": "2025-01-10",
+      "description": "COMCAST BUSINESS 8774 INTERNET",
+      "amount": "149.99",
+      "direction": "debit",
+      "running_balance": "18050.56"
+    },
+    {
+      "date": "2025-01-13",
+      "description": "STRIPE TRANSFER ST-D4E5F6 PAYOUT",
+      "amount": "5175.60",
+      "direction": "credit",
+      "running_balance": "23226.16"
+    },
+    {
+      "date": "2025-01-14",
+      "description": "USPS PO 4459087713 SHIPPING",
+      "amount": "87.45",
+      "direction": "debit",
+      "running_balance": "23138.71"
+    },
+    {
+      "date": "2025-01-15",
+      "description": "GUSTO PAYROLL 6SNJ2 NET PAY",
+      "amount": "3850.00",
+      "direction": "debit",
+      "running_balance": "19288.71"
+    },
+    {
+      "date": "2025-01-15",
+      "description": "IRS USATAXPYMT 220115 EFTPS",
+      "amount": "982.13",
+      "direction": "debit",
+      "running_balance": "18306.58"
+    },
+    {
+      "date": "2025-01-16",
+      "description": "AMAZON MKTPL US*RT4Y77 SUPPLIES",
+      "amount": "153.21",
+      "direction": "debit",
+      "running_balance": "18153.37"
+    },
+    {
+      "date": "2025-01-17",
+      "description": "ONLINE TRANSFER TO SAV ****9921 CONF# 88213",
+      "amount": "2000.00",
+      "direction": "debit",
+      "running_balance": "16153.37"
+    },
+    {
+      "date": "2025-01-21",
+      "description": "STRIPE TRANSFER ST-G7H8I9 PAYOUT",
+      "amount": "4480.90",
+      "direction": "credit",
+      "running_balance": "20634.27"
+    },
+    {
+      "date": "2025-01-22",
+      "description": "FL DEPT REVENUE SALES TAX 0125",
+      "amount": "612.40",
+      "direction": "debit",
+      "running_balance": "20021.87"
+    },
+    {
+      "date": "2025-01-23",
+      "description": "LANDLORD PROPERTIES LLC RENT JAN",
+      "amount": "2500.00",
+      "direction": "debit",
+      "running_balance": "17521.87"
+    },
+    {
+      "date": "2025-01-24",
+      "description": "CHASE CARD AUTOPAY 4412 EPAY",
+      "amount": "1873.43",
+      "direction": "debit",
+      "running_balance": "15648.44"
+    },
+    {
+      "date": "2025-01-27",
+      "description": "MOBILE DEPOSIT REF 82231",
+      "amount": "1500.00",
+      "direction": "credit",
+      "running_balance": "17148.44"
+    },
+    {
+      "date": "2025-01-28",
+      "description": "STRIPE TRANSFER ST-J1K2L3 PAYOUT",
+      "amount": "3954.20",
+      "direction": "credit",
+      "running_balance": "21102.64"
+    },
+    {
+      "date": "2025-01-30",
+      "description": "WIRE TRANSFER FEE",
+      "amount": "25.00",
+      "direction": "debit",
+      "running_balance": "21077.64"
+    },
+    {
+      "date": "2025-01-31",
+      "description": "INTEREST PAYMENT",
+      "amount": "3.12",
+      "direction": "credit",
+      "running_balance": "21080.76"
+    }
+  ],
+  "continues_beyond_these_pages": false
+}

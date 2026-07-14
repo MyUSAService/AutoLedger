@@ -1,6 +1,8 @@
 // Altemore Statement Portal — Phase 1 data model.
 // Money is ALWAYS stored as integer cents. Never floats.
 
+// Driver-adapter mode (PrismaPg in src/lib/db.ts): no native query-engine
+// binary — smaller deploys, works on any host.
 generator client {
   provider = "prisma-client-js"
 }

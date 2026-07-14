@@ -1,0 +1,56 @@
+{
+  "is_bank_statement": true,
+  "bank_name": "Wells Fargo Bank, N.A.",
+  "account_last4": "3315",
+  "account_type": "checking",
+  "currency": "USD",
+  "period_start": "2025-03-01",
+  "period_end": "2025-03-31",
+  "opening_balance": "18104.50",
+  "closing_balance": "20987.70",
+  "lines": [
+    {
+      "date": "2025-03-03",
+      "description": "STRIPE TRANSFER ST-V4W5X6 PAYOUT",
+      "amount": "4482.10",
+      "direction": "credit",
+      "running_balance": "22586.60"
+    },
+    {
+      "date": "2025-03-05",
+      "description": "GOOGLE ADS 7534218890",
+      "amount": "380.00",
+      "direction": "debit",
+      "running_balance": "22206.60"
+    },
+    {
+      "date": "2025-03-10",
+      "description": "GUSTO PAYROLL 8ULM4 NET PAY",
+      "amount": "3850.00",
+      "direction": "debit",
+      "running_balance": "18356.60"
+    },
+    {
+      "date": "2025-03-17",
+      "description": "STRIPE TRANSFER ST-Y7Z8A9 PAYOUT",
+      "amount": "5021.10",
+      "direction": "credit",
+      "running_balance": "23377.70"
+    },
+    {
+      "date": "2025-03-20",
+      "description": "LANDLORD PROPERTIES LLC RENT MAR",
+      "amount": "2500.00",
+      "direction": "debit",
+      "running_balance": "20877.70"
+    },
+    {
+      "date": "2025-03-28",
+      "description": "MONTHLY SERVICE FEE",
+      "amount": "10.00",
+      "direction": "debit",
+      "running_balance": "20867.70"
+    }
+  ],
+  "continues_beyond_these_pages": false
+}

@@ -1,0 +1,112 @@
+{
+  "is_bank_statement": true,
+  "bank_name": "Bank of America, N.A.",
+  "account_last4": "7702",
+  "account_type": "checking",
+  "currency": "USD",
+  "period_start": "2025-02-01",
+  "period_end": "2025-02-28",
+  "opening_balance": "23589.47",
+  "closing_balance": "47176.94",
+  "lines": [
+    {
+      "date": "2025-02-03",
+      "description": "STRIPE TRANSFER ST-M4N5O6 PAYOUT",
+      "amount": "5122.80",
+      "direction": "credit",
+      "running_balance": "28712.27"
+    },
+    {
+      "date": "2025-02-04",
+      "description": "SBA LOAN PROCEEDS DISBURSEMENT 5512",
+      "amount": "25000.00",
+      "direction": "credit",
+      "running_balance": "53712.27"
+    },
+    {
+      "date": "2025-02-05",
+      "description": "DELL MARKETING LP EQUIPMENT INV88231",
+      "amount": "3899.00",
+      "direction": "debit",
+      "running_balance": "49813.27"
+    },
+    {
+      "date": "2025-02-06",
+      "description": "GOOGLE ADS 7534218890",
+      "amount": "400.00",
+      "direction": "debit",
+      "running_balance": "49413.27"
+    },
+    {
+      "date": "2025-02-10",
+      "description": "STRIPE TRANSFER ST-P7Q8R9 PAYOUT",
+      "amount": "4611.55",
+      "direction": "credit",
+      "running_balance": "54024.82"
+    },
+    {
+      "date": "2025-02-11",
+      "description": "ZELLE TO MARCO ROSSI",
+      "amount": "1000.00",
+      "direction": "debit",
+      "running_balance": "53024.82"
+    },
+    {
+      "date": "2025-02-14",
+      "description": "GUSTO PAYROLL 7TKL3 NET PAY",
+      "amount": "3850.00",
+      "direction": "debit",
+      "running_balance": "49174.82"
+    },
+    {
+      "date": "2025-02-14",
+      "description": "IRS USATAXPYMT 220214 EFTPS",
+      "amount": "982.13",
+      "direction": "debit",
+      "running_balance": "48192.69"
+    },
+    {
+      "date": "2025-02-18",
+      "description": "LANDLORD PROPERTIES LLC RENT FEB",
+      "amount": "2500.00",
+      "direction": "debit",
+      "running_balance": "45692.69"
+    },
+    {
+      "date": "2025-02-20",
+      "description": "SBA LOAN PAYMENT 5512",
+      "amount": "550.00",
+      "direction": "debit",
+      "running_balance": "45142.69"
+    },
+    {
+      "date": "2025-02-24",
+      "description": "STRIPE TRANSFER ST-S1T2U3 PAYOUT",
+      "amount": "4788.30",
+      "direction": "credit",
+      "running_balance": "49930.99"
+    },
+    {
+      "date": "2025-02-25",
+      "description": "FL DEPT REVENUE SALES TAX 0225",
+      "amount": "581.10",
+      "direction": "debit",
+      "running_balance": "49349.89"
+    },
+    {
+      "date": "2025-02-26",
+      "description": "AMEX EPAYMENT ACH PMT M1234",
+      "amount": "2156.00",
+      "direction": "debit",
+      "running_balance": "47193.89"
+    },
+    {
+      "date": "2025-02-28",
+      "description": "MAINTENANCE FEE",
+      "amount": "16.95",
+      "direction": "debit",
+      "running_balance": "47176.94"
+    }
+  ],
+  "continues_beyond_these_pages": false
+}

@@ -15,3 +15,5 @@
 
 [functions]
   node_bundler = "esbuild"
+  # Generated Prisma client must ship with the background/scheduled functions too
+  included_files = ["node_modules/.prisma/client/**"]

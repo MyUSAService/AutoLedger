@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     });
     if (recent < 5) {
       const raw = await createMagicLink(user.id);
-      const link = `${process.env.APP_URL || "http://localhost:3000"}/api/auth/client/verify?token=${raw}`;
+      const link = `${process.env.APP_URL || process.env.URL || "http://localhost:3000"}/api/auth/client/verify?token=${raw}`;
       const locale = (user.client?.language === "en" ? "en" : "it") as "it" | "en";
       await sendMail({ to: user.email, ...magicLinkEmail(link, locale) });
       await db.auditLog.create({

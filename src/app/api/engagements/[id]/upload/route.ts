@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { storage, sha256, documentKey } from "@/services/storage";
 import { enqueue } from "@/services/queue";
+import { triggerJobProcessing } from "@/services/jobTrigger";
 import { requireStaff, AuthError } from "@/lib/auth";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25 MB per statement
@@ -60,5 +61,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
 
   const jobId = await enqueue("process_statement", { documentId: doc.id });
+  await triggerJobProcessing();
   return NextResponse.json({ documentId: doc.id, jobId });
 }

@@ -15,17 +15,18 @@ async function main() {
     update: {},
   });
 
-  // Dev password — CHANGE BEFORE ANY REAL DEPLOYMENT.
-  const devPassword = hashPassword("altemore-dev-2026");
+  // Initial password — set ONLY on first creation, never overwritten on
+  // redeploys (the seed runs on every Netlify build). Change after first login.
+  const initialPassword = hashPassword(process.env.SEED_STAFF_PASSWORD || "altemore-dev-2026");
   await db.user.upsert({
     where: { email: "staff@altemore.com" },
-    create: { email: "staff@altemore.com", role: "STAFF", firmId: firm.id, passwordHash: devPassword },
-    update: { passwordHash: devPassword },
+    create: { email: "staff@altemore.com", role: "STAFF", firmId: firm.id, passwordHash: initialPassword },
+    update: {},
   });
   await db.user.upsert({
     where: { email: "admin@altemore.com" },
-    create: { email: "admin@altemore.com", role: "ADMIN", firmId: firm.id, passwordHash: devPassword },
-    update: { passwordHash: devPassword },
+    create: { email: "admin@altemore.com", role: "ADMIN", firmId: firm.id, passwordHash: initialPassword },
+    update: {},
   });
 
   const client = await db.client.upsert({

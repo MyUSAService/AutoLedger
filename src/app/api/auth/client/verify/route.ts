@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
-  const base = process.env.APP_URL || "http://localhost:3000";
+  const base = process.env.APP_URL || process.env.URL || "http://localhost:3000";
   if (!token) return NextResponse.redirect(`${base}/login?error=invalid`);
 
   const user = await consumeMagicLink(token);

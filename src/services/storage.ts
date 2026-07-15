@@ -77,13 +77,36 @@ class S3Driver implements StorageDriver {
   }
 }
 
+/** Netlify Blobs driver — zero-config on Netlify (site-scoped, encrypted at rest). */
+class NetlifyBlobsDriver implements StorageDriver {
+  private async store() {
+    const { getStore } = await import("@netlify/blobs");
+    return getStore({ name: "statement-portal", consistency: "strong" });
+  }
+  async put(key: string, data: Buffer) {
+    await (await this.store()).set(key, new Uint8Array(data).buffer as ArrayBuffer);
+  }
+  async get(key: string) {
+    const buf = await (await this.store()).get(key, { type: "arrayBuffer" });
+    if (!buf) throw new Error(`blob not found: ${key}`);
+    return Buffer.from(buf);
+  }
+  async exists(key: string) {
+    const meta = await (await this.store()).getMetadata(key);
+    return meta !== null;
+  }
+}
+
 let _driver: StorageDriver | null = null;
 export function storage(): StorageDriver {
   if (!_driver) {
+    const driver = process.env.STORAGE_DRIVER || "local";
     _driver =
-      (process.env.STORAGE_DRIVER || "local") === "s3"
+      driver === "s3"
         ? new S3Driver()
-        : new LocalDriver(process.env.STORAGE_LOCAL_PATH || "./storage");
+        : driver === "netlify_blobs"
+          ? new NetlifyBlobsDriver()
+          : new LocalDriver(process.env.STORAGE_LOCAL_PATH || "./storage");
   }
   return _driver;
 }

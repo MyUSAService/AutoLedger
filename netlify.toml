@@ -1,0 +1,11 @@
+# Netlify configuration — AutoLedger (Altemore statement portal)
+
+[build]
+  command = "npm run netlify:build"
+
+# Scheduled retry: re-triggers the background job processor if jobs are pending.
+[functions."retry-jobs"]
+  schedule = "*/15 * * * *"
+
+[functions]
+  node_bundler = "esbuild"

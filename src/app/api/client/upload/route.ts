@@ -4,6 +4,7 @@ import { requireClient, AuthError } from "@/lib/auth";
 import { getCurrentEngagement } from "@/services/clientPortal";
 import { storage, sha256, documentKey } from "@/services/storage";
 import { enqueue } from "@/services/queue";
+import { triggerJobProcessing } from "@/services/jobTrigger";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/i18n";
 
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
       },
     });
     const jobId = await enqueue("process_statement", { documentId: doc.id });
+    await triggerJobProcessing();
     return NextResponse.json({ documentId: doc.id, jobId });
   } catch (e) {
     if (e instanceof AuthError) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

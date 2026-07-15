@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { enqueue } from "@/services/queue";
+import { triggerJobProcessing } from "@/services/jobTrigger";
 import { requireStaff, AuthError } from "@/lib/auth";
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +18,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   await db.engagement.update({ where: { id }, data: { status: "IN_REVIEW" } });
   const jobId = await enqueue("generate_workbook", { engagementId: id, generatedByUserId: staff.id });
+  await triggerJobProcessing();
 
   await db.reviewAction.create({
     data: { engagementId: id, userId: staff.id, action: "release", toValue: `job:${jobId}` },

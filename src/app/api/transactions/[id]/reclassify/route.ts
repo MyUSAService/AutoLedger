@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isValidCategoryCode, COA_BY_CODE } from "@/core/chartOfAccounts";
+import { requireStaff, AuthError } from "@/lib/auth";
 
-/**
- * Staff reclassification + optional rule-learning (§3D, §3F).
- * Phase 1: single seeded staff user; real auth lands in Phase 2.
- */
+/** Staff reclassification + optional rule-learning (§3D, §3F). */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let staff;
+  try {
+    staff = await requireStaff();
+  } catch (e) {
+    if (e instanceof AuthError) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    throw e;
+  }
   const { id } = await params;
   const body = await req.json();
   const { categoryCode, saveAsRule } = body as { categoryCode: string; saveAsRule?: boolean };
@@ -19,9 +24,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     include: { engagement: { include: { client: true } } },
   });
   if (!txn) return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
-
-  const staff = await db.user.findFirst({ where: { role: "STAFF" } });
-  if (!staff) return NextResponse.json({ error: "No staff user seeded" }, { status: 500 });
 
   const section = COA_BY_CODE.get(categoryCode)!.section;
   const excludeFromPnl = section !== "income" && section !== "expense";

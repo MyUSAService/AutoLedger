@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { storage, sha256, documentKey } from "@/services/storage";
 import { enqueue } from "@/services/queue";
+import { requireStaff, AuthError } from "@/lib/auth";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25 MB per statement
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireStaff();
+  } catch (e) {
+    if (e instanceof AuthError) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    throw e;
+  }
   const { id: engagementId } = await params;
   const engagement = await db.engagement.findUnique({ where: { id: engagementId } });
   if (!engagement) return NextResponse.json({ error: "Engagement not found" }, { status: 404 });

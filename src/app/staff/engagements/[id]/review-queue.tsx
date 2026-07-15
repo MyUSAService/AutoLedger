@@ -50,6 +50,17 @@ export function ReviewQueue({ engagementId, items }: { engagementId: string; ite
     }
   }
 
+  async function confirm(item: QueueItem) {
+    setBusyId(item.id);
+    try {
+      const res = await fetch(`/api/transactions/${item.id}/resolve`, { method: "POST" });
+      if (!res.ok) throw new Error(`Failed (${res.status})`);
+      router.refresh();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   if (items.length === 0) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800">
@@ -110,13 +121,25 @@ export function ReviewQueue({ engagementId, items }: { engagementId: string; ite
                     />
                     save as rule for this client
                   </label>
-                  <button
-                    onClick={() => reclassify(item)}
-                    disabled={!selections[item.id] || busyId === item.id}
-                    className="bg-gray-900 text-white text-xs rounded px-2 py-1 disabled:bg-gray-200 disabled:text-gray-400"
-                  >
-                    {busyId === item.id ? "Saving…" : "Apply"}
-                  </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => reclassify(item)}
+                      disabled={!selections[item.id] || busyId === item.id}
+                      className="flex-1 bg-gray-900 text-white text-xs rounded px-2 py-1 disabled:bg-gray-200 disabled:text-gray-400"
+                    >
+                      {busyId === item.id ? "Saving…" : "Apply"}
+                    </button>
+                    {item.categoryCode && (
+                      <button
+                        onClick={() => confirm(item)}
+                        disabled={busyId === item.id}
+                        title="Confirm current classification and resolve the flag"
+                        className="flex-1 bg-green-700 text-white text-xs rounded px-2 py-1 disabled:opacity-50"
+                      >
+                        Confirm
+                      </button>
+                    )}
+                  </div>
                 </div>
               </td>
             </tr>

@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/auth";
 import { coverageCalendar } from "@/core/reconciliation";
 import { formatUsd } from "@/core/money";
 import { UploadForm } from "./upload-form";
@@ -8,6 +10,8 @@ import { GenerateButton } from "./generate-button";
 export const dynamic = "force-dynamic";
 
 export default async function EngagementPage({ params }: { params: Promise<{ id: string }> }) {
+  const user = await getSessionUser();
+  if (!user || (user.role !== "STAFF" && user.role !== "ADMIN")) redirect("/staff-login");
   const { id } = await params;
   const engagement = await db.engagement.findUniqueOrThrow({
     where: { id },

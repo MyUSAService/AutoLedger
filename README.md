@@ -4,9 +4,13 @@ Client bank-statement processing pipeline for the Altemore accounting practice. 
 
 Design philosophy: errors are LOUD and LOCALIZED, never silent. A rejected document with a clear reason is a success; a plausible-looking wrong number is a failure. When in doubt, flag — never guess.
 
-## Phase 1 scope (this build)
+## Scope shipped
 
-Staff-only internal tool: upload → extraction → reconciliation gate → classification → exception-first review queue → versioned Excel workbook. Client portal (bilingual IT/EN, questionnaire) is Phase 2; rule-learning admin panel and notifications are Phase 3.
+**Phase 1** — staff pipeline: upload → extraction → reconciliation gate → classification → exception-first review queue → versioned Excel workbook.
+
+**Phase 2** — client portal: passwordless magic-link login for clients, password + emailed 6-digit code for staff, bilingual UI (Italian default, EN toggle, all copy in `src/i18n/*.json`), drag-and-drop upload with plain-language statuses, coverage calendar, progress view, and the guided balance-sheet questionnaire (Step E) with plain-language flag resolution. Client answers become PROPOSALS (visible in the staff queue with a one-click Confirm) — nothing is final until staff review. Transactional email via Resend (console fallback in dev).
+
+Phase 3 (remaining): contradiction detection, admin panel for chart/rules, notification emails (upload received / questions waiting / workbook ready).
 
 ## Stack
 
@@ -24,7 +28,11 @@ npm run dev                   # web UI on http://localhost:3000
 npm run worker                # background pipeline worker (separate terminal)
 ```
 
-Open http://localhost:3000 → demo engagement → upload PDFs from `tests/fixtures/pdf/`.
+Sign-in (after `npm run db:seed`):
+- Staff: http://localhost:3000/staff-login — `staff@altemore.com` / `altemore-dev-2026` (6-digit code prints to the console until you set RESEND_API_KEY). **Change this password before any real deployment.**
+- Client demo: http://localhost:3000/login — `cliente@bellavita.example` (magic link prints to the console).
+
+Then upload PDFs from `tests/fixtures/pdf/` and answer the questionnaire at /client/questions.
 
 ## Tests
 
@@ -58,6 +66,6 @@ tests/fixtures/             synthetic statement PDFs + known-good expected JSON
 scripts/                    fixture generator (Python), live extraction check
 ```
 
-## Notes for Phase 2
+## Security notes
 
-Auth is stubbed to the seeded staff user (real email+password with mandatory 2FA for staff, magic links for clients, comes with the client portal). Virus scanning, rate limiting, and session management land with client-facing exposure. All client-facing copy must live in i18n resource files.
+Sessions: httpOnly cookies, sha256-hashed server-side, 12h absolute + 60min idle timeout. One-time tokens (magic links, 2FA codes) are stored hashed, single-use, rate-limited (5 links/hour, 5 code attempts). Upload rate limit 30/hour per engagement. Account numbers masked to last-4 end to end. Remaining before public launch: virus scanning on uploads, production password policy, CSP headers.

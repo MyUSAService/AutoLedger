@@ -1,9 +1,13 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function StaffDashboard() {
+  const user = await getSessionUser();
+  if (!user || (user.role !== "STAFF" && user.role !== "ADMIN")) redirect("/staff-login");
   const engagements = await db.engagement.findMany({
     include: {
       client: true,

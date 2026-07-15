@@ -3,8 +3,10 @@
  * Run: npm run db:seed
  */
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { hashPassword } from "../src/lib/auth";
 
-const db = new PrismaClient();
+const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
 
 async function main() {
   const firm = await db.firm.upsert({
@@ -13,15 +15,17 @@ async function main() {
     update: {},
   });
 
+  // Dev password — CHANGE BEFORE ANY REAL DEPLOYMENT.
+  const devPassword = hashPassword("altemore-dev-2026");
   await db.user.upsert({
     where: { email: "staff@altemore.com" },
-    create: { email: "staff@altemore.com", role: "STAFF", firmId: firm.id },
-    update: {},
+    create: { email: "staff@altemore.com", role: "STAFF", firmId: firm.id, passwordHash: devPassword },
+    update: { passwordHash: devPassword },
   });
   await db.user.upsert({
     where: { email: "admin@altemore.com" },
-    create: { email: "admin@altemore.com", role: "ADMIN", firmId: firm.id },
-    update: {},
+    create: { email: "admin@altemore.com", role: "ADMIN", firmId: firm.id, passwordHash: devPassword },
+    update: { passwordHash: devPassword },
   });
 
   const client = await db.client.upsert({
@@ -43,7 +47,13 @@ async function main() {
     update: {},
   });
 
-  console.log("Seeded: firm, staff+admin users, demo client, FY2025 engagement");
+  await db.user.upsert({
+    where: { email: "cliente@bellavita.example" },
+    create: { email: "cliente@bellavita.example", role: "CLIENT", firmId: firm.id, clientId: client.id },
+    update: {},
+  });
+
+  console.log("Seeded: firm, staff+admin (staff@altemore.com / altemore-dev-2026), demo client user cliente@bellavita.example, FY2025 engagement");
 }
 
 main().finally(() => db.$disconnect());

@@ -1,10 +1,14 @@
 // Altemore Statement Portal — Phase 1 data model.
 // Money is ALWAYS stored as integer cents. Never floats.
 
-// Driver-adapter mode (PrismaPg in src/lib/db.ts): no native query-engine
-// binary — smaller deploys, works on any host.
+// queryCompiler + driver adapter (PrismaPg in src/lib/db.ts): no native
+// query-engine binary — smaller deploys, works on any host.
+// The "deprecated preview" warning is cosmetic; without these flags the
+// generated client still requires the native engine.
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  engineType      = "client" // Rust-free client engine — no native binary
+  previewFeatures = ["queryCompiler", "driverAdapters"]
 }
 
 datasource db {
@@ -31,7 +35,7 @@ enum UserRole {
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
-  passwordHash  String? // staff/admin; clients may use magic links (Phase 2)
+  passwordHash  String? // staff/admin (scrypt); clients use magic links
   role          UserRole
   firmId        String
   firm          Firm           @relation(fields: [firmId], references: [id])
@@ -40,6 +44,41 @@ model User {
   createdAt     DateTime       @default(now())
   reviewActions ReviewAction[]
   auditLogs     AuditLog[]
+  sessions      Session[]
+  loginTokens   LoginToken[]
+}
+
+// ---------- Auth (Phase 2) ----------
+
+enum LoginTokenPurpose {
+  MAGIC_LINK // client login
+  STAFF_2FA  // 6-digit email code, second factor after password
+}
+
+model LoginToken {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  purpose   LoginTokenPurpose
+  tokenHash String            @unique // sha256 of the raw token/code — raw value never stored
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int               @default(0) // brute-force guard for 6-digit codes
+  createdAt DateTime          @default(now())
+
+  @@index([userId, purpose])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  tokenHash  String   @unique // sha256 of the cookie value
+  expiresAt  DateTime // absolute timeout
+  lastSeenAt DateTime @default(now()) // idle timeout tracking
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum EntityType {

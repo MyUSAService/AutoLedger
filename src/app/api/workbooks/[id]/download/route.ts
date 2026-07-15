@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { storage } from "@/services/storage";
+import { requireStaff, AuthError } from "@/lib/auth";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireStaff();
+  } catch (e) {
+    if (e instanceof AuthError) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    throw e;
+  }
   const { id } = await params;
   const wb = await db.generatedWorkbook.findUnique({
     where: { id },

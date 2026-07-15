@@ -18,14 +18,17 @@ async function main() {
   // Initial password — set ONLY on first creation, never overwritten on
   // redeploys (the seed runs on every Netlify build). Change after first login.
   const initialPassword = hashPassword(process.env.SEED_STAFF_PASSWORD || "altemore-dev-2026");
+
+  // Remove obsolete seed users from earlier deploys (2FA emails must reach a real mailbox).
+  for (const email of ["staff@altemore.com", "admin@altemore.com"]) {
+    await db.user.deleteMany({ where: { email } }).catch(() => {
+      /* keep if referenced by review actions */
+    });
+  }
+
   await db.user.upsert({
-    where: { email: "staff@altemore.com" },
-    create: { email: "staff@altemore.com", role: "STAFF", firmId: firm.id, passwordHash: initialPassword },
-    update: {},
-  });
-  await db.user.upsert({
-    where: { email: "admin@altemore.com" },
-    create: { email: "admin@altemore.com", role: "ADMIN", firmId: firm.id, passwordHash: initialPassword },
+    where: { email: "info@altemore.com" },
+    create: { email: "info@altemore.com", role: "ADMIN", firmId: firm.id, passwordHash: initialPassword },
     update: {},
   });
 

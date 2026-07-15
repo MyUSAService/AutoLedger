@@ -34,22 +34,25 @@ export function anthropicPdfClient(): PdfExtractionClient {
       const pagePrompt = pageRange
         ? `${prompt}\n\nProcess ONLY pages ${pageRange.first} through ${pageRange.last} of this document. Set continues_beyond_these_pages=true if the transaction table continues past page ${pageRange.last}.`
         : prompt;
-      const msg = await client().messages.create({
-        model: MODEL(),
-        max_tokens: 32000,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "document",
-                source: { type: "base64", media_type: "application/pdf", data: pdfBase64 },
-              },
-              { type: "text", text: pagePrompt },
-            ],
-          },
-        ],
-      });
+      // Streamed: the SDK rejects non-streaming requests with large max_tokens.
+      const msg = await client()
+        .messages.stream({
+          model: MODEL(),
+          max_tokens: 32000,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "document",
+                  source: { type: "base64", media_type: "application/pdf", data: pdfBase64 },
+                },
+                { type: "text", text: pagePrompt },
+              ],
+            },
+          ],
+        })
+        .finalMessage();
       const text = msg.content
         .filter((b): b is Anthropic.TextBlock => b.type === "text")
         .map((b) => b.text)
@@ -94,11 +97,13 @@ export function anthropicClassifier(
             `{"id":"${t.id}","date":"${t.date}","description":${JSON.stringify(t.rawDescription)},"amount_cents":${t.amountCents},"direction":"${t.direction}"}`
         )
         .join("\n");
-      const msg = await client().messages.create({
-        model: MODEL(),
-        max_tokens: 8000,
-        messages: [{ role: "user", content: `${prompt}\n\nTransactions:\n${txnList}` }],
-      });
+      const msg = await client()
+        .messages.stream({
+          model: MODEL(),
+          max_tokens: 8000,
+          messages: [{ role: "user", content: `${prompt}\n\nTransactions:\n${txnList}` }],
+        })
+        .finalMessage();
       const text = msg.content
         .filter((b): b is Anthropic.TextBlock => b.type === "text")
         .map((b) => b.text)

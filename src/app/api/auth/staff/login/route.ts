@@ -20,9 +20,18 @@ export async function POST(req: NextRequest) {
   }
 
   const code = await createStaffCode(user.id);
-  await sendMail({ to: user.email, ...staffCodeEmail(code) });
+  let emailOk = true;
+  try {
+    await sendMail({ to: user.email, ...staffCodeEmail(code) });
+  } catch (e) {
+    // Email failure must not lock staff out: surface the code in the
+    // function logs (private to the site owner) and tell the UI.
+    emailOk = false;
+    console.error(`[staff-login] EMAIL SEND FAILED for ${user.email}:`, e);
+    console.error(`[staff-login] 2FA code for ${user.email} (email failed, read from logs): ${code}`);
+  }
   await db.auditLog.create({
-    data: { userId: user.id, entity: "User", entityId: user.id, action: "staff_2fa_code_sent" },
+    data: { userId: user.id, entity: "User", entityId: user.id, action: emailOk ? "staff_2fa_code_sent" : "staff_2fa_email_failed" },
   });
-  return NextResponse.json({ pending: true });
+  return NextResponse.json({ pending: true, emailOk });
 }

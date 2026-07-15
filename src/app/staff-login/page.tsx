@@ -12,18 +12,32 @@ export default function StaffLoginPage() {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
+  const [emailFailed, setEmailFailed] = useState(false);
+
   async function submitPassword(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch("/api/auth/staff/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    setBusy(false);
-    if (res.ok) setStep("code");
-    else setError("Invalid email or password.");
+    try {
+      const res = await fetch("/api/auth/staff/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        const body = await res.json();
+        setEmailFailed(body.emailOk === false);
+        setStep("code");
+      } else if (res.status === 401) {
+        setError("Invalid email or password.");
+      } else {
+        setError(`Server error (${res.status}) — check the function logs.`);
+      }
+    } catch {
+      setError("Network error — is the site reachable?");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function submitCode(e: React.FormEvent) {
@@ -57,7 +71,14 @@ export default function StaffLoginPage() {
         </form>
       ) : (
         <form onSubmit={submitCode} className="space-y-4">
-          <p className="text-sm text-gray-500">We emailed a 6-digit code to {email}.</p>
+          {emailFailed ? (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+              The code email could not be sent (check email provider settings). The code is printed in the
+              server function logs — Netlify → Logs → Functions.
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">We emailed a 6-digit code to {email}.</p>
+          )}
           <input inputMode="numeric" pattern="\d{6}" maxLength={6} required placeholder="000000" value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-center text-xl tracking-[0.5em]" />

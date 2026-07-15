@@ -3,6 +3,12 @@
 [build]
   command = "npm run netlify:build"
 
+[build.environment]
+  # These env vars are configuration, not secrets — their values legitimately
+  # appear in code/docs. Real secrets (DATABASE_URL, ANTHROPIC_API_KEY,
+  # RESEND_API_KEY, SEED_STAFF_PASSWORD) remain scanned.
+  SECRETS_SCAN_OMIT_KEYS = "STORAGE_DRIVER,ANTHROPIC_MODEL,APP_URL,EMAIL_FROM,LARGE_PURCHASE_THRESHOLD_CENTS,EXTRACTION_MAX_PAGES_PER_CHUNK"
+
 # Scheduled retry: re-triggers the background job processor if jobs are pending.
 [functions."retry-jobs"]
   schedule = "*/15 * * * *"

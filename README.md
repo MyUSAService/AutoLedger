@@ -29,7 +29,7 @@ npm run worker                # background pipeline worker (separate terminal)
 ```
 
 Sign-in (after `npm run db:seed`):
-- Staff: http://localhost:3000/staff-login — `staff@altemore.com` / `altemore-dev-2026` (6-digit code prints to the console until you set RESEND_API_KEY). **Change this password before any real deployment.**
+- Staff: http://localhost:3000/staff-login — `info@altemore.com` / `altemore-dev-2026` (6-digit code prints to the console until you set RESEND_API_KEY; set SEED_STAFF_PASSWORD in production).
 - Client demo: http://localhost:3000/login — `cliente@bellavita.example` (magic link prints to the console).
 
 Then upload PDFs from `tests/fixtures/pdf/` and answer the questionnaire at /client/questions.

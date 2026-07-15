@@ -12,8 +12,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // runtime: transaction pooler (6543) on Supabase
+  // Schema changes (db push / migrations) can't run through a transaction
+  // pooler — they use the session pooler / direct connection instead.
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // ---------- Org & auth ----------

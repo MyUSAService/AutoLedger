@@ -15,5 +15,6 @@
 
 [functions]
   node_bundler = "esbuild"
-  # Generated Prisma client must ship with the background/scheduled functions too
-  included_files = ["node_modules/.prisma/client/**"]
+  # Generated Prisma client + prompt templates are read from disk at runtime —
+  # both must ship inside the function bundles.
+  included_files = ["node_modules/.prisma/client/**", "prompts/**"]

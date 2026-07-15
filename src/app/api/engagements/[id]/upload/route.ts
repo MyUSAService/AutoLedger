@@ -37,8 +37,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const existing = await db.statementDocument.findUnique({
     where: { engagementId_fileSha256: { engagementId, fileSha256: sha } },
   });
-  if (existing)
+  if (existing) {
+    // Re-uploading a failed/rejected document = retry, not duplicate.
+    if (["REJECTED", "DUPLICATE", "FAILED_RECONCILIATION"].includes(existing.status)) {
+      await db.statementDocument.update({
+        where: { id: existing.id },
+        data: { status: "UPLOADED", rejectionReason: null, reconAttempts: 0 },
+      });
+      const jobId = await enqueue("process_statement", { documentId: existing.id });
+      await triggerJobProcessing();
+      return NextResponse.json({ documentId: existing.id, jobId, retried: true });
+    }
     return NextResponse.json({ error: `Duplicate: this exact file was already uploaded (${existing.originalFilename})` }, { status: 409 });
+  }
 
   // naive page count: count /Type /Page occurrences (good enough for chunking hints)
   const pageCount = Math.max(1, (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length);

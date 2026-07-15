@@ -46,6 +46,7 @@ export async function processStatementJob(jobId: string, payload: { documentId: 
   }
 
   if (outcome.status === "invalid_json") {
+    console.error(`[pipeline] extraction invalid_json for doc ${doc.id}:`, outcome.error);
     await db.statementDocument.update({
       where: { id: doc.id },
       data: { status: "REJECTED", rejectionReason: "Extraction produced unreadable output. Staff attention required." },

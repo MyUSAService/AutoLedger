@@ -43,7 +43,18 @@ export async function POST(req: NextRequest) {
     const existing = await db.statementDocument.findUnique({
       where: { engagementId_fileSha256: { engagementId: engagement.id, fileSha256: sha } },
     });
-    if (existing) return NextResponse.json({ error: t(locale, "upload.duplicate") }, { status: 409 });
+    if (existing) {
+      if (["REJECTED", "DUPLICATE", "FAILED_RECONCILIATION"].includes(existing.status)) {
+        await db.statementDocument.update({
+          where: { id: existing.id },
+          data: { status: "UPLOADED", rejectionReason: null, reconAttempts: 0 },
+        });
+        const jobId = await enqueue("process_statement", { documentId: existing.id });
+        await triggerJobProcessing();
+        return NextResponse.json({ documentId: existing.id, jobId, retried: true });
+      }
+      return NextResponse.json({ error: t(locale, "upload.duplicate") }, { status: 409 });
+    }
 
     const pageCount = Math.max(1, (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length);
     const key = documentKey(engagement.id, sha, file.name);

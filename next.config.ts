@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   // and is not picked up by output file tracing — include it explicitly or
   // serverless deploys fail with ENOENT.
   outputFileTracingIncludes: {
-    "/**": ["./node_modules/.prisma/client/**/*", "./node_modules/@prisma/client/**/*"],
+    "/**": ["./node_modules/.prisma/client/**/*", "./node_modules/@prisma/client/**/*", "./prompts/**/*"],
   },
 };
 
